@@ -5,10 +5,9 @@ import {
   Idl,
   setProvider,
 } from "@project-serum/anchor"
-import { IDL, Nft } from "../idl/program_idl"
+import { IDL, Nft } from "../idl/NftProgram"
 import { Connection, PublicKey } from "@solana/web3.js"
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react"
-// import MockWallet from "./MockWallet"
 
 const AnchorContext = createContext({})
 const programId = new PublicKey("5aia16UteFJBDNNW3RBqtxRqVKULCBKgppjPafEvTzG1")

@@ -6,7 +6,7 @@ export const WalletMultiButtonDynamic = dynamic(
   { ssr: false }
 )
 
-const WalletMultiButton = ({ style }: { style?: React.CSSProperties }) => {
+const WalletMultiButton = () => {
   return <WalletMultiButtonDynamic />
 }
 

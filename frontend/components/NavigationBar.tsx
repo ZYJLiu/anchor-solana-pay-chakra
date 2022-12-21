@@ -1,11 +1,8 @@
-import { Box, Flex, Text, HStack, Spacer } from "@chakra-ui/react"
-import { useRouter } from "next/router"
+import { Box, HStack, Spacer } from "@chakra-ui/react"
 import Link from "next/link"
 import WalletMultiButton from "./WalletMultiButton"
-function NavigationBar() {
-  const router = useRouter()
-  const pathname = router.pathname
 
+const NavigationBar = () => {
   return (
     <Box p={4}>
       <HStack justify={"flex-end"} direction={"row"} spacing={6}>

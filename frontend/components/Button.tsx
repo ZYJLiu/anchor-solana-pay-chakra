@@ -1,5 +1,5 @@
 import { Flex, Button, useDisclosure } from "@chakra-ui/react"
-import QrModal from "./QrModal"
+import QrModal from "./QrCodeNftMint"
 
 const QRCode = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -7,7 +7,7 @@ const QRCode = () => {
   return (
     <Flex>
       <Button onClick={onOpen}>Open Modal</Button>
-      {isOpen && <QrModal onClose={onClose} isOpen={isOpen} />}
+      {isOpen && <QrModal onClose={onClose} />}
     </Flex>
   )
 }

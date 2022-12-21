@@ -1,13 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js"
 import { getAssociatedTokenAddress } from "@solana/spl-token"
-import { Metaplex } from "@metaplex-foundation/js"
-import {
-  connection,
-  nftProgram as program,
-  nft,
-  TOKEN_METADATA_PROGRAM_ID,
-} from "../../utils/setup"
+import { BN } from "@project-serum/anchor"
+import { connection, splTransferProgram as program } from "../../utils/setup"
 
 type InputData = {
   account: string
@@ -45,6 +40,13 @@ async function post(
     return
   }
 
+  const { receiver } = req.query
+  if (!receiver) {
+    console.log("Returning 400: no receiver")
+    res.status(400).json({ error: "No receiver provided" })
+    return
+  }
+
   const { reference } = req.query
   if (!reference) {
     console.log("Returning 400: no reference")
@@ -52,10 +54,19 @@ async function post(
     return
   }
 
+  const { amount } = req.query
+  if (!amount) {
+    console.log("Returning 400: no amount")
+    res.status(400).json({ error: "No amount provided" })
+    return
+  }
+
   try {
     const mintOutputData = await postImpl(
       new PublicKey(account),
-      new PublicKey(reference)
+      new PublicKey(receiver),
+      new PublicKey(reference),
+      new BN(amount.toString())
     )
     res.status(200).json(mintOutputData)
     return
@@ -68,47 +79,24 @@ async function post(
 
 async function postImpl(
   account: PublicKey,
-  reference: PublicKey
+  receiver: PublicKey,
+  reference: PublicKey,
+  amount: BN
 ): Promise<PostResponse> {
-  // Metaplex setup
-  const metaplex = Metaplex.make(connection).nfts().pdas()
+  const mint = new PublicKey("Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr")
 
-  // Create new mint for NFT
-  const mintKeypair = Keypair.generate()
-
-  // Master edition PDA for mint
-  const masterEditionPda = metaplex.masterEdition({
-    mint: mintKeypair.publicKey,
-  })
-
-  // Token metadata PDA for mint
-  const metadataPda = metaplex.metadata({ mint: mintKeypair.publicKey })
-
-  // Anchor program mint authority PDA
-  const [auth] = await PublicKey.findProgramAddress(
-    [Buffer.from("auth")],
-    program.programId
-  )
-
-  // token account address for user minting NFT
-  const tokenAccount = await getAssociatedTokenAddress(
-    mintKeypair.publicKey,
-    account
-  )
+  const senderTokenAccount = await getAssociatedTokenAddress(mint, account)
+  const receiverTokenAccount = await getAssociatedTokenAddress(mint, receiver)
 
   const instruction = await program.methods
-    .initialize(nft.uri, nft.name, nft.symbol)
+    .tokenTransfer(amount)
     .accounts({
-      mint: mintKeypair.publicKey,
-      metadata: metadataPda,
-      masterEdition: masterEditionPda,
-      auth: auth,
-      tokenAccount: tokenAccount,
-      user: account,
-      payer: account,
-      tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+      sender: account,
+      receiver: receiver,
+      fromTokenAccount: senderTokenAccount,
+      toTokenAccount: receiverTokenAccount,
+      mint: mint,
     })
-    // .signers([mintKeypair])
     .instruction()
 
   instruction.keys.push({
@@ -129,9 +117,6 @@ async function postImpl(
 
   // add instruction to transaction
   transaction.add(instruction)
-
-  // add new mintKeypair as signer
-  transaction.sign(mintKeypair)
 
   // Serialize the transaction and convert to base64 to return it
   const serializedTransaction = transaction.serialize({
