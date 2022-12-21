@@ -68,6 +68,38 @@ function get(res: NextApiResponse<GetResponse>) {
   })
 }
 
+async function post(
+  req: NextApiRequest,
+  res: NextApiResponse<PostResponse | PostError>
+) {
+  const { account } = req.body as InputData
+  console.log(req.body)
+  if (!account) {
+    res.status(400).json({ error: "No account provided" })
+    return
+  }
+
+  const { reference } = req.query
+  if (!reference) {
+    console.log("Returning 400: no reference")
+    res.status(400).json({ error: "No reference provided" })
+    return
+  }
+
+  try {
+    const mintOutputData = await postImpl(
+      new PublicKey(account),
+      new PublicKey(reference)
+    )
+    res.status(200).json(mintOutputData)
+    return
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: "error creating transaction" })
+    return
+  }
+}
+
 async function postImpl(
   account: PublicKey,
   reference: PublicKey
@@ -147,38 +179,6 @@ async function postImpl(
   return {
     transaction: base64,
     message,
-  }
-}
-
-async function post(
-  req: NextApiRequest,
-  res: NextApiResponse<PostResponse | PostError>
-) {
-  const { account } = req.body as InputData
-  console.log(req.body)
-  if (!account) {
-    res.status(400).json({ error: "No account provided" })
-    return
-  }
-
-  const { reference } = req.query
-  if (!reference) {
-    console.log("Returning 400: no reference")
-    res.status(400).json({ error: "No reference provided" })
-    return
-  }
-
-  try {
-    const mintOutputData = await postImpl(
-      new PublicKey(account),
-      new PublicKey(reference)
-    )
-    res.status(200).json(mintOutputData)
-    return
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: "error creating transaction" })
-    return
   }
 }
 

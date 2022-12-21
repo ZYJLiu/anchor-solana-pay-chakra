@@ -1,7 +1,6 @@
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState } from "react"
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar"
 import "react-circular-progressbar/dist/styles.css"
-import interpolate from "color-interpolate"
 
 const Confirmed = () => {
   const [percentage, setPercentage] = useState(0)

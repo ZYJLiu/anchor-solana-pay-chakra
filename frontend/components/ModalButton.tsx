@@ -1,8 +1,10 @@
 import { Flex, Button, useDisclosure } from "@chakra-ui/react"
 import QrModal from "./QrModal"
+import { useAnchor } from "../contexts/AnchorContextProvider"
 
 const ModalButton = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const { program, connection, provider } = useAnchor()
 
   return (
     <Flex>

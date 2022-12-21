@@ -1,10 +1,13 @@
 import { Flex } from "@chakra-ui/react"
 import ModalButton from "../components/ModalButton"
-
+import NumberPad from "../components/Numpad"
 export default function Home() {
   return (
-    <Flex alignItems="center" justifyContent="center">
-      <ModalButton />
-    </Flex>
+    <div>
+      <Flex height="75vh" alignItems="center" justifyContent="center">
+        <NumberPad />
+        <ModalButton />
+      </Flex>
+    </div>
   )
 }
