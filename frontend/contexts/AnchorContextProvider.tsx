@@ -20,8 +20,6 @@ interface AnchorWorkSpace {
 }
 
 const AnchorContextProvider = ({ children }: any) => {
-  // const network = "https://api.devnet.solana.com/"
-  // const connection = new Connection(network)
   const { connection } = useConnection()
   const wallet = useAnchorWallet()
   const provider = new AnchorProvider(connection, wallet!, {})
