@@ -6,7 +6,7 @@ export default function Home() {
 
   return (
     <Flex justifyContent="center">
-      <Button onClick={onOpen}>Open Modal</Button>
+      <Button onClick={onOpen}>Mint NFT</Button>
       {isOpen && <QrModal onClose={onClose} />}
     </Flex>
   )

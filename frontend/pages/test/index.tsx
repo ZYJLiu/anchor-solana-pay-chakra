@@ -5,7 +5,7 @@ const Test = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   return (
     <Flex justifyContent="center">
-      <Button onClick={onOpen}>Test Modal</Button>
+      <Button onClick={onOpen}>Spl Transfer</Button>
       {isOpen && <QrModal onClose={onClose} />}
     </Flex>
   )

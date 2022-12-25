@@ -56,7 +56,7 @@ const QrModal = ({ onClose }: Props) => {
       qrRef.current.innerHTML = ""
       qr.append(qrRef.current)
     }
-  }, [window, size, reference])
+  }, [window, size, reference, publicKey])
 
   useEffect(() => {
     const interval = setInterval(async () => {
