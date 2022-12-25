@@ -36,25 +36,30 @@ const QrModal = ({ onClose }: Props) => {
   }, [])
 
   useEffect(() => {
-    const { location } = window
-    const params = new URLSearchParams()
-    params.append("reference", reference.toString())
-    params.append("receiver", publicKey!.toString())
-    params.append("amount", String(10))
+    if (publicKey) {
+      const { location } = window
+      const params = new URLSearchParams()
+      params.append("reference", reference.toString())
+      params.append("receiver", publicKey!.toString())
+      params.append("amount", String(10))
 
-    const apiUrl = `${location.protocol}//${
-      location.host
-    }/api/transfer?${params.toString()}`
-    const urlParams: TransactionRequestURLFields = {
-      link: new URL(apiUrl),
-      label: "Label",
-      message: "Message",
-    }
-    const solanaUrl = encodeURL(urlParams)
-    const qr = createQR(solanaUrl, size, "white")
-    if (qrRef.current) {
-      qrRef.current.innerHTML = ""
-      qr.append(qrRef.current)
+      const apiUrl = `${location.protocol}//${
+        location.host
+      }/api/transfer?${params.toString()}`
+      const urlParams: TransactionRequestURLFields = {
+        link: new URL(apiUrl),
+        label: "Label",
+        message: "Message",
+      }
+      const solanaUrl = encodeURL(urlParams)
+      const qr = createQR(solanaUrl, size, "white")
+      if (qrRef.current) {
+        qrRef.current.innerHTML = ""
+        qr.append(qrRef.current)
+      }
+    } else {
+      alert("Connection Wallet")
+      onClose()
     }
   }, [window, size, reference, publicKey])
 

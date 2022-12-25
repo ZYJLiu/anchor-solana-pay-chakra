@@ -6,9 +6,9 @@ const NavigationBar = () => {
   return (
     <Box p={4}>
       <HStack justify={"flex-end"} direction={"row"} spacing={6}>
-        <Link href="/">Home</Link>
+        <Link href="/">Mint Nft</Link>
+        <Link href="/transfer">Spl Transfer</Link>
         <Link href="/test">Test</Link>
-        <Link href="/">Test</Link>
         <Spacer />
         <WalletMultiButton />
       </HStack>

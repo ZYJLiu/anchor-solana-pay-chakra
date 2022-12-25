@@ -1,3 +1,5 @@
+// for use with static nfc tag, but dynamically update reference, amount, receiver
+
 import { Button, Flex, VStack } from "@chakra-ui/react"
 import {
   createQR,
@@ -7,19 +9,23 @@ import {
   TransactionRequestURLFields,
   ValidateTransferError,
 } from "@solana/pay"
+import { useWallet } from "@solana/wallet-adapter-react"
 import { clusterApiUrl, Connection, Keypair } from "@solana/web3.js"
 import { useEffect, useRef, useState } from "react"
 import Confirmed from "./Confirmed"
 
 interface Props {
   onClose: () => void
+  value: number
 }
 
-const QrModal = ({ onClose }: Props) => {
+const QrModal = ({ onClose, value }: Props) => {
+  console.log(value)
   const [confirmed, setConfirmed] = useState(false)
   const connection = new Connection(clusterApiUrl("devnet"))
   const qrRef = useRef<HTMLDivElement>(null)
   const [reference] = useState(Keypair.generate().publicKey)
+  const { publicKey } = useWallet()
 
   const [size, setSize] = useState(() =>
     typeof window === "undefined" ? 100 : Math.min(window.outerWidth - 10, 512)
@@ -32,26 +38,43 @@ const QrModal = ({ onClose }: Props) => {
   }, [])
 
   useEffect(() => {
-    const { location } = window
-    const params = new URLSearchParams()
-    params.append("reference", reference.toString())
+    if (publicKey) {
+      const { location } = window
+      const apiUrl = `${location.protocol}//${location.host}/api/test`
+      const urlParams: TransactionRequestURLFields = {
+        link: new URL(apiUrl),
+      }
+      const solanaUrl = encodeURL(urlParams)
+      const qr = createQR(solanaUrl, size, "white")
+      if (qrRef.current) {
+        qrRef.current.innerHTML = ""
+        qr.append(qrRef.current)
+      }
 
-    const apiUrl = `${location.protocol}//${
-      location.host
-    }/api/checkout?${params.toString()}`
-    const urlParams: TransactionRequestURLFields = {
-      link: new URL(apiUrl),
-      label: "Label",
-      message: "Message",
+      // const data = {
+      //   receiver: "2Dbi1BTTVFeL8KD5r9sUxxdyjUbwFCGQ2eEWNpdvrYWs",
+      //   reference: "2Dbi1BTTVFeL8KD5r9sUxxdyjUbwFCGQ2eEWNpdvrYWs",
+      //   amount: "20",
+      // }
+
+      const url = new URL("/api/test", window.location.origin)
+      url.search = new URLSearchParams({ path: "update-data" }).toString()
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          receiver: publicKey.toString(),
+          reference: reference.toString(),
+          amount: value.toString(),
+        }),
+      })
+        .then((res) => res.json())
+        .then((json) => console.log(json))
     }
-    const solanaUrl = encodeURL(urlParams)
-    console.log(solanaUrl)
-    const qr = createQR(solanaUrl, size, "white")
-    if (qrRef.current) {
-      qrRef.current.innerHTML = ""
-      qr.append(qrRef.current)
-    }
-  }, [window, size, reference])
+  }, [window, size, reference, publicKey])
 
   useEffect(() => {
     const interval = setInterval(async () => {
