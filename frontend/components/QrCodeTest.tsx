@@ -10,7 +10,7 @@ import {
   ValidateTransferError,
 } from "@solana/pay"
 import { useWallet } from "@solana/wallet-adapter-react"
-import { clusterApiUrl, Connection, Keypair } from "@solana/web3.js"
+import { clusterApiUrl, Connection, Keypair, PublicKey } from "@solana/web3.js"
 import { useEffect, useRef, useState } from "react"
 import Confirmed from "./Confirmed"
 
@@ -26,6 +26,7 @@ const QrModal = ({ onClose, value }: Props) => {
   const qrRef = useRef<HTMLDivElement>(null)
   const [reference] = useState(Keypair.generate().publicKey)
   const { publicKey } = useWallet()
+  const url = new URL("/api/test", window.location.origin)
 
   const [size, setSize] = useState(() =>
     typeof window === "undefined" ? 100 : Math.min(window.outerWidth - 10, 512)
@@ -37,64 +38,71 @@ const QrModal = ({ onClose, value }: Props) => {
     return () => window.removeEventListener("resize", listener)
   }, [])
 
-  useEffect(() => {
-    if (publicKey) {
-      const { location } = window
-      const apiUrl = `${location.protocol}//${location.host}/api/test`
-      const urlParams: TransactionRequestURLFields = {
-        link: new URL(apiUrl),
-      }
-      const solanaUrl = encodeURL(urlParams)
-      const qr = createQR(solanaUrl, size, "white")
-      if (qrRef.current) {
-        qrRef.current.innerHTML = ""
-        qr.append(qrRef.current)
-      }
+  function updateData(
+    publicKey?: PublicKey,
+    reference?: PublicKey,
+    value?: number
+  ) {
+    url.search = new URLSearchParams({ path: "update-data" }).toString()
 
-      // const data = {
-      //   receiver: "2Dbi1BTTVFeL8KD5r9sUxxdyjUbwFCGQ2eEWNpdvrYWs",
-      //   reference: "2Dbi1BTTVFeL8KD5r9sUxxdyjUbwFCGQ2eEWNpdvrYWs",
-      //   amount: "20",
-      // }
-
-      const url = new URL("/api/test", window.location.origin)
-      url.search = new URLSearchParams({ path: "update-data" }).toString()
-
-      fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          receiver: publicKey.toString(),
-          reference: reference.toString(),
-          amount: value.toString(),
-        }),
-      })
-        .then((res) => res.json())
-        .then((json) => console.log(json))
+    const data = {
+      receiver: publicKey ? publicKey.toString() : "",
+      reference: reference ? reference.toString() : "",
+      amount: value ? value.toString() : "",
     }
-  }, [window, size, reference, publicKey])
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((json) => console.log(json))
+  }
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const signatureInfo = await findReference(connection, reference, {
-          finality: "confirmed",
-        })
-        setConfirmed(true)
-      } catch (e) {
-        if (e instanceof FindReferenceError) return
-        if (e instanceof ValidateTransferError) {
-          console.error("Transaction is invalid", e)
-          return
-        }
-        console.error("Unknown error", e)
+    if (!publicKey) return
+
+    const urlParams = {
+      link: new URL(url),
+    }
+    const solanaUrl = encodeURL(urlParams)
+    const qr = createQR(solanaUrl, size, "white")
+
+    if (qrRef.current) {
+      qrRef.current.innerHTML = ""
+      qr.append(qrRef.current)
+    }
+
+    updateData(publicKey, reference, value)
+  }, [size, reference, publicKey])
+
+  async function checkTransaction() {
+    try {
+      const signatureInfo = await findReference(connection, reference, {
+        finality: "confirmed",
+      })
+      setConfirmed(true)
+      updateData()
+    } catch (e) {
+      if (e instanceof FindReferenceError) return
+      if (e instanceof ValidateTransferError) {
+        console.error("Transaction is invalid", e)
+        return
       }
-    }, 500)
+      console.error("Unknown error", e)
+    }
+  }
+
+  useEffect(() => {
+    const interval = setInterval(checkTransaction, 500)
+
     return () => {
       clearInterval(interval)
       setConfirmed(false)
+      updateData()
     }
   }, [reference.toString()])
 

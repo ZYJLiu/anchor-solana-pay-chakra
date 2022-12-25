@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import { Keypair, PublicKey, Transaction } from "@solana/web3.js"
+import { PublicKey, Transaction } from "@solana/web3.js"
 import { getAssociatedTokenAddress, getMint } from "@solana/spl-token"
 import { BN } from "@project-serum/anchor"
 import { connection, splTransferProgram as program } from "../../utils/setup"
@@ -24,6 +24,10 @@ export type PostResponse = {
   message: string
 }
 
+export type UpdatePostResponse = {
+  success: boolean
+}
+
 export type PostError = {
   error: string
 }
@@ -37,10 +41,11 @@ function get(res: NextApiResponse<GetResponse>) {
 
 async function post(
   req: NextApiRequest,
-  res: NextApiResponse<PostResponse | PostError>
+  res: NextApiResponse<PostResponse | PostError | UpdatePostResponse>
 ) {
   if (req.query.path === "update-data") {
     data = { ...data, ...req.body }
+    res.json({ success: true })
   } else {
     const { account } = req.body as InputData
     console.log(req.body)
@@ -49,14 +54,22 @@ async function post(
       return
     }
 
+    if (data.receiver === "" || data.reference === "") {
+      res.status(200).json({
+        transaction: "",
+        message: "No active checkout",
+      })
+      return
+    }
+
     try {
-      const mintOutputData = await postImpl(
+      const postResponse = await postImpl(
         new PublicKey(account),
         new PublicKey(data.receiver),
         new PublicKey(data.reference),
         Number(data.amount)
       )
-      res.status(200).json(mintOutputData)
+      res.status(200).json(postResponse)
       return
     } catch (error) {
       console.error(error)
@@ -126,7 +139,9 @@ async function postImpl(
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<GetResponse | PostResponse | PostError>
+  res: NextApiResponse<
+    GetResponse | PostResponse | PostError | UpdatePostResponse
+  >
 ) {
   if (req.method === "GET") {
     return get(res)
