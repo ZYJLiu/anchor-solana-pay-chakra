@@ -38,7 +38,7 @@ const QrModal = ({ onClose }: Props) => {
 
     const apiUrl = `${location.protocol}//${
       location.host
-    }/api/checkout?${params.toString()}`
+    }/api/mintNft?${params.toString()}`
     const urlParams: TransactionRequestURLFields = {
       link: new URL(apiUrl),
       label: "Label",
