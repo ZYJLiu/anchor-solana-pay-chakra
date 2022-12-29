@@ -51,8 +51,6 @@ const QrModal = ({ onClose, value }: Props) => {
       amount: value ? value.toString() : "",
     }
 
-    console.log(url, "update")
-
     fetch(url, {
       method: "POST",
       headers: {
@@ -72,8 +70,6 @@ const QrModal = ({ onClose, value }: Props) => {
     }
     const solanaUrl = encodeURL(urlParams)
     const qr = createQR(solanaUrl, size, "white")
-    console.log(url, "reg")
-    console.log(solanaUrl, "reg")
 
     if (qrRef.current) {
       qrRef.current.innerHTML = ""
