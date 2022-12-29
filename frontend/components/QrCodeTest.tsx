@@ -26,7 +26,6 @@ const QrModal = ({ onClose, value }: Props) => {
   const qrRef = useRef<HTMLDivElement>(null)
   const [reference] = useState(Keypair.generate().publicKey)
   const { publicKey } = useWallet()
-  const url = new URL("/api/test", window.location.origin)
 
   const [size, setSize] = useState(() =>
     typeof window === "undefined" ? 100 : Math.min(window.outerWidth - 10, 512)
@@ -43,6 +42,7 @@ const QrModal = ({ onClose, value }: Props) => {
     reference?: PublicKey,
     value?: number
   ) {
+    const url = new URL("/api/test", window.location.origin)
     url.search = new URLSearchParams({ path: "update-data" }).toString()
 
     const data = {
@@ -50,6 +50,8 @@ const QrModal = ({ onClose, value }: Props) => {
       reference: reference ? reference.toString() : "",
       amount: value ? value.toString() : "",
     }
+
+    console.log(url, "update")
 
     fetch(url, {
       method: "POST",
@@ -64,12 +66,14 @@ const QrModal = ({ onClose, value }: Props) => {
 
   useEffect(() => {
     if (!publicKey) return
-
+    const url = new URL("/api/test", window.location.origin)
     const urlParams = {
       link: new URL(url),
     }
     const solanaUrl = encodeURL(urlParams)
     const qr = createQR(solanaUrl, size, "white")
+    console.log(url, "reg")
+    console.log(solanaUrl, "reg")
 
     if (qrRef.current) {
       qrRef.current.innerHTML = ""
